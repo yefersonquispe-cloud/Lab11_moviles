@@ -96,7 +96,7 @@ fun TasksScreenContent(
         items(tasks.value, key = { it.id }) { taskItem ->
           TaskItem(
             task = taskItem,
-            options = listOf(),
+            options = TaskActionOption.getOptions(hasEditOption = true),
             onCheckChange = { onTaskCheckChange(taskItem) },
             onActionClick = { action -> onTaskActionClick(openScreen, taskItem, action) }
           )
