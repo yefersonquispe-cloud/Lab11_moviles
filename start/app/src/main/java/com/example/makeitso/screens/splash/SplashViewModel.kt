@@ -26,28 +26,32 @@ import com.example.makeitso.screens.MakeItSoViewModel
 import com.google.firebase.auth.FirebaseAuthException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-  configurationService: ConfigurationService,
+  private val configurationService: ConfigurationService,
   private val accountService: AccountService,
-  logService: LogService
+  private val logService: LogService
 ) : MakeItSoViewModel(logService) {
   val showError = mutableStateOf(false)
 
-  init {
-    launchCatching { configurationService.fetchConfiguration() }
-  }
-
   fun onAppStart(openAndPopUp: (String, String) -> Unit) {
-
     showError.value = false
-    if (accountService.hasUser) openAndPopUp(TASKS_SCREEN, SPLASH_SCREEN)
-    else createAnonymousAccount(openAndPopUp)
-  }
-
-  private fun createAnonymousAccount(openAndPopUp: (String, String) -> Unit) {
     launchCatching(snackbar = false) {
+      try {
+        configurationService.fetchConfiguration()
+      } catch (ex: CancellationException) {
+        throw ex
+      } catch (ex: Exception) {
+        logService.logNonFatalCrash(ex)
+      }
+
+      if (accountService.hasUser) {
+        openAndPopUp(TASKS_SCREEN, SPLASH_SCREEN)
+        return@launchCatching
+      }
+
       try {
         accountService.createAnonymousAccount()
       } catch (ex: FirebaseAuthException) {

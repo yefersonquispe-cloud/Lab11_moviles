@@ -31,19 +31,18 @@ class ConfigurationServiceImpl @Inject constructor() : ConfigurationService {
   private val remoteConfig
     get() = Firebase.remoteConfig
 
-  init {
-    if (BuildConfig.DEBUG) {
-      val configSettings = remoteConfigSettings { minimumFetchIntervalInSeconds = 0 }
-      remoteConfig.setConfigSettingsAsync(configSettings)
+  override suspend fun fetchConfiguration(): Boolean =
+    trace(FETCH_CONFIG_TRACE) {
+      if (BuildConfig.DEBUG) {
+        val configSettings = remoteConfigSettings { minimumFetchIntervalInSeconds = 0 }
+        remoteConfig.setConfigSettingsAsync(configSettings).await()
+      }
+      remoteConfig.setDefaultsAsync(AppConfig.remote_config_defaults).await()
+      remoteConfig.fetchAndActivate().await()
     }
 
-    remoteConfig.setDefaultsAsync(AppConfig.remote_config_defaults)
-  }
-
-  override suspend fun fetchConfiguration(): Boolean = true
-
   override val isShowTaskEditButtonConfig: Boolean
-    get() = true
+    get() = remoteConfig[SHOW_TASK_EDIT_BUTTON_KEY].asBoolean()
 
   companion object {
     private const val SHOW_TASK_EDIT_BUTTON_KEY = "show_task_edit_button"

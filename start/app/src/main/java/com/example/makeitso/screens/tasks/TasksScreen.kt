@@ -45,9 +45,11 @@ fun TasksScreen(
 ) {
   val tasks = viewModel.tasks
     .collectAsStateWithLifecycle(emptyList())
+  val options by viewModel.options
 
   TasksScreenContent(
     tasks = tasks,
+    options = options,
     onAddClick = viewModel::onAddClick,
     onSettingsClick = viewModel::onSettingsClick,
     onTaskCheckChange = viewModel::onTaskCheckChange,
@@ -64,6 +66,7 @@ fun TasksScreen(
 fun TasksScreenContent(
   modifier: Modifier = Modifier,
   tasks: State<List<Task>>,
+  options: List<String>,
   onAddClick: ((String) -> Unit) -> Unit,
   onSettingsClick: ((String) -> Unit) -> Unit,
   onTaskCheckChange: (Task) -> Unit,
@@ -96,7 +99,7 @@ fun TasksScreenContent(
         items(tasks.value, key = { it.id }) { taskItem ->
           TaskItem(
             task = taskItem,
-            options = TaskActionOption.getOptions(hasEditOption = true),
+            options = options,
             onCheckChange = { onTaskCheckChange(taskItem) },
             onActionClick = { action -> onTaskActionClick(openScreen, taskItem, action) }
           )
@@ -113,6 +116,7 @@ fun TasksScreenPreview() {
   MakeItSoTheme {
     TasksScreenContent(
       tasks = remember { mutableStateOf<List<Task>>(emptyList()) },
+      options = TaskActionOption.getOptions(hasEditOption = true),
       onAddClick = { },
       onSettingsClick = { },
       onTaskCheckChange = { },
